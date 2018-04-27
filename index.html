@@ -1,73 +1,44 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt" lang="pt">
 	<head>
 		<title>QRCode Javascript</title>
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-		<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+		<link rel="stylesheet" href="css/reset.css" type="text/css"/>
+		<link rel="stylesheet" href="css/style.css" media="screen" type="text/css"/>
+		<!-- Dependencias do projeto -->
 		<script type="text/javascript" src="qrcode_lib/jquery.min.js"></script>
 		<script type="text/javascript" src="qrcode_lib/qrcode.js"></script>
+		<!-- Importante manter a tag DEFER, e fazer o import das bibliotecas acima -->
+		<script type="text/javascript" src="qr_auth_lib.js" defer></script>
 	</head>
 	<body>
-		<input id="text" type="text" value="QRCode exemplo" style="width:80%" /><br />
-		<div id="qrcode" style="width:300px; height:300px; margin-top:15px;"></div>
-
-		<script type="text/javascript">
-			//cria objecto QRCode
-			var qrcode = new QRCode(document.getElementById("qrcode"), {
-				width : 300,
-				height : 300
-			});
-
-			function makeCode () {
-				var elText = document.getElementById("text");
-				if (!elText.value) {
-					alert("Input a text");
-					elText.focus();
-					return;
-				}
-				qrcode.makeCode(elText.value);
-			}
-
-			function init() {
-				/*
-					1 - d = window.location.href
-					2 - Gera parametro acordo chaves
-							function httpGetAsync(url, callback) {
-							    var http = new XMLHttpRequest();
-							    http.onreadystatechange = function() {
-							        if (http.readyState == 4 && http.status == 200)
-							            callback(http.responseText);
-							    }
-							    http.open("GET", theUrl, true); //true for asynchronous
-							    http.send(null);
-							}
-							//função de callback lida com resposta que pode ser um json
-					3 - recebe: nonce, id, pAcordoChave
-					4 - Gera QR -> definir tipo de informação (JSON??)
-							qrString = geraString(d, nonce, id, pAcordoChave, sharedKey)
-					5 - qrcode.makeCode(qrString)
-				*/
-				makeCode();
-				/*
-					6 - ciclo de chamadas ao servidor API para verificar credenciais
-							tempo de reprobe = 1s
-					7 - recebe credenciais e valida
-							credenciais = retorno função callback
-					8 - autopreenche campos com informação ex.:
-							credenciais.login, credenciais.token ...
-				*/
-			}
-			init();
-
-			$("#text").
-				on("blur", function () {
-					makeCode();
-				}).
-				on("keydown", function (e) {
-					if (e.keyCode == 13) {
-						//ENTER_KEY pressed
-						makeCode();
-					}
-				});
+		<div class="wrap">
+			<div class="avatar">
+				<img src="https://digitalnomadsforum.com/styles/FLATBOOTS/theme/images/user4.png">
+			</div>
+			<form action="https://google.com" method="post" target="_blank">
+				<input name="username" type="text" placeholder="username" required>
+				<div class="bar">
+          <i></i>
+        </div>
+				<input name="password" type="password" placeholder="password" required>
+				<button type="submit" onclick="validate()">Login</button>
+			</form>
+			<button type="submit" onclick="open_qr()">Login with QRCode</button>
+		</div>
+		<br>
+		
+		<script>
+		validate = function() {
+			if(document.getElementsByName('username')[0].value &&
+			document.getElementsByName('password')[0].value) alert('Success');
+		}
+		open_qr = function() {
+			var div = document.getElementById('qrcode_auth');
+			while(div.firstChild) div.removeChild(div.firstChild);
+			initQRCode("qrcode_auth");
+		}
 		</script>
+		<div id='qrcode_auth' class="center"></div>
 	</body>
 </html>
