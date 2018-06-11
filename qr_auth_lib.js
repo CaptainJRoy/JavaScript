@@ -1,5 +1,6 @@
 var server_json_response;
 var ready_post = false;
+var server_port = ":8081";
 
 function initQRCode(element) {
   //1 - Inicializar variaveis
@@ -16,7 +17,8 @@ function initQRCode(element) {
   timestamp_milis = Date.now();
   rand_id = Math.floor(Math.random()*1000000);
   temp__id = "" + timestamp_milis + "&" + rand_id;
-  httpPostAsync(serverIP, post_callback, d, temp__id);
+  httpPostAsync(serverIP, post_callback + '/sessionCreator/', d, temp__id);
+
   setTimeout(self_check_postReq, 100);
   //Problema?
   //while(!ready_post);
@@ -31,7 +33,7 @@ function initQRCode(element) {
 
 
   //4 - Gera QR
-  qrString = geraString(d, nonce, session_id, sharedKey)
+  qrString = geraString(d, nonce, session_id, sharedKey);
   qrcode.makeCode(qrString);
 
   /*
@@ -49,18 +51,16 @@ function initQRCode(element) {
         //função de callback lida com resposta que pode ser um json
     6 - recebe credenciais e valida
         credenciais = retorno função callback
-    7 - autopreenche campos com informação ex.:
-        credenciais.login, credenciais.token ...
   */
 }
 
 function httpGetAsync(url, callback) {
-    var http = new XMLHttpRequest();
+    var http = new XMLHttpRequest({mozSystem: true});
     http.onreadystatechange = function() {
         if (http.readyState == 4 && http.status == 200)
             callback(http.responseText);
     }
-    http.open("GET", theUrl, true); //true for asynchronous
+    http.open("GET", theUrl + server_port, true); //true for asynchronous
     http.send(null);
 }
 
@@ -80,9 +80,10 @@ function post_callback(value) {
   ready_post = true;
 }
 
+
 function httpPostAsync(theUrl, callback, domain, client) {
-    var http = new XMLHttpRequest();
-    var params = "domain=" + domain + "&client=" + client;
+    var http = new XMLHttpRequest({mozSystem: true});
+    var params = server_port + "/domain=" + domain + "&client_key=" + client;
 
     http.onreadystatechange = function() {
         if (http.readyState == 4 && http.status == 201)
@@ -93,7 +94,7 @@ function httpPostAsync(theUrl, callback, domain, client) {
           console.log('Status == ' + http.status);
         }
     }
-    http.open("POST", theUrl, true); //true for asynchronous
+    http.open("POST", theUrl + params, true); //true for asynchronous
     //Send the proper header information along with the request
     http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     http.send(params);
