@@ -1,100 +1,103 @@
-var server_json_response;
-var ready_post = false;
+var sessCreat_json;
+var sessCreat_ready = false;
+var server_port = ":8081";
+
+let session = {};
+let elementGlobal;
+var serverIP = "http://127.0.0.1:8081";
+var d = window.location.href;
+
 
 function initQRCode(element) {
   //1 - Inicializar variaveis
-  var serverIP = "http://127.0.0.1";
-  var qrcode = new QRCode(document.getElementById(element), {
+  elementGlobal = element;
+
+  //2 - Gera parametro acordo chaves???
+  var params = {'domain':d,'client_key':'test_key'}
+  params = JSON.stringify(params);
+  httpSessCreat(sessCreatCallback, serverIP + '/sessionCreator', params);
+}
+
+
+function httpSessCreat(callback, url, params) {
+  var http = new XMLHttpRequest({mozSystem: true});
+
+  console.log("URL sent: " + url);
+  console.log("Params sent: " + params);
+  http.onreadystatechange = function() {
+    if (http.readyState == 4 && http.status == 200) callback(http.response);
+  }
+  http.open('POST', url, true);
+  http.setRequestHeader("Content-type", "application/json");
+  http.send(params);
+}
+
+
+function sessCreatCallback(value) {
+  //3 - recebe: nonce, id, pAcordoChave
+  sessCreat_json = JSON.parse(value);
+  sessCreat_ready = true;
+  session["id"] = sessCreat_json['session'];
+  console.log("Session: " + session);
+
+  //4 - Gera QR (utilizar chaves partilhadas e afins)
+  var qrcode = new QRCode(document.getElementById(elementGlobal), {
     width : window.innerWidth/4,
     height : window.innerWidth/4
   });
-  var d = window.location.href;
-
-
-  //2 - Gera parametro acordo chaves
-  //identificador de cliente temporário
-  timestamp_milis = Date.now();
-  rand_id = Math.floor(Math.random()*1000000);
-  temp__id = "" + timestamp_milis + "&" + rand_id;
-  httpPostAsync(serverIP, post_callback, d, temp__id);
-  setTimeout(self_check_postReq, 100);
-  //Problema?
-  //while(!ready_post);
-  server_json_response = '{"nonce":111111, "session_id":123, "handshake":1}';
-
-
-  //3 - recebe: nonce, id, pAcordoChave
-  var jquery_array = JSON.parse(server_json_response);
-  var nonce = jquery_array['nonce'];
-  var session_id = jquery_array['session_id'];
-  var sharedKey = jquery_array['handshake'];
-
-
-  //4 - Gera QR
-  qrString = geraString(d, nonce, session_id, sharedKey)
+  qrString = geraString(session["id"]);
   qrcode.makeCode(qrString);
 
+  //5 - Verificar se credenciais já foram enviadas pela app
+  verifyCredentials(credentialsCallback, serverIP + '/session/' + session["id"]);
+
   /*
-    5 - ciclo de chamadas ao servidor API para verificar credenciais
-        tempo de reprobe = 1s
-        function httpGetAsync(url, callback) {
-            var http = new XMLHttpRequest();
-            http.onreadystatechange = function() {
-                if (http.readyState == 4 && http.status == 200)
-                    callback(http.responseText);
-            }
-            http.open("GET", theUrl, true); //true for asynchronous
-            http.send(null);
-        }
-        //função de callback lida com resposta que pode ser um json
     6 - recebe credenciais e valida
         credenciais = retorno função callback
-    7 - autopreenche campos com informação ex.:
-        credenciais.login, credenciais.token ...
   */
 }
 
-function httpGetAsync(url, callback) {
-    var http = new XMLHttpRequest();
-    http.onreadystatechange = function() {
-        if (http.readyState == 4 && http.status == 200)
-            callback(http.responseText);
+
+function geraString(id) {
+  return d + "<|>" + id;
+}
+
+
+function verifyCredentials(callback, url) {
+  var http = new XMLHttpRequest({mozSystem: true});
+  http.onreadystatechange = function() {
+      if (http.readyState == 4 && http.status == 200)
+          callback(http.responseText);
+  }
+  http.open("GET", url, true); //true for asynchronous
+  http.setRequestHeader("Content-type", "application/json");
+  http.send(null);
+}
+
+
+var cont = true;
+function credentialsCallback(value) {
+  //5.1 - ciclo de chamadas ao servidor API para verificar credenciais
+  setTimeout(() => {cont = false;}, 5000);
+  if(cont) {
+    credentials = JSON.parse(value);
+    if(credentials["user"] && credentials["password"]) {
+      console.log(credentials);
+      session["user"] = credentials["user"];
+      session["password"] = credentials["password"];
+      finalizeAndFill();
     }
-    http.open("GET", theUrl, true); //true for asynchronous
-    http.send(null);
-}
-
-function geraString(d, nonce, id, sK) {
-  return d + "<|>" + nonce + "<|>" + id + "<|>" + sK;
-}
-
-function self_check_postReq() {
-  if(server_json_response)
-    setTimeout(self_check_postReq, 1000);
-  else ready_post = true;
-}
-
-function post_callback(value) {
-  console.log(value);
-  server_json_response = value;
-  ready_post = true;
-}
-
-function httpPostAsync(theUrl, callback, domain, client) {
-    var http = new XMLHttpRequest();
-    var params = "domain=" + domain + "&client=" + client;
-
-    http.onreadystatechange = function() {
-        if (http.readyState == 4 && http.status == 201)
-            callback(http.responseText);
-        else {
-          alert('Error occured');
-          console.log('readyState == ' + http.readyState);
-          console.log('Status == ' + http.status);
-        }
+    else {
+      setTimeout(() => {
+        verifyCredentials(credentialsCallback, serverIP + '/session/' + session["id"]);
+      }, 1000);
     }
-    http.open("POST", theUrl, true); //true for asynchronous
-    //Send the proper header information along with the request
-    http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    http.send(params);
+  }
+}
+
+
+function finalizeAndFill() {
+  document.getElementById("user").value = session["user"];
+  document.getElementById("pass").value = session["password"];
+  setTimeout(() => {document.getElementById("btn").click();}, 1000);
 }

