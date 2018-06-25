@@ -8,11 +8,40 @@
 		<!-- Dependencias do projeto -->
 		<script type="text/javascript" src="qrcode_lib/jquery.min.js"></script>
 		<script type="text/javascript" src="qrcode_lib/qrcode.js"></script>
+		<script type="text/javascript" src="script/jsencrypt.js" defer></script>
 		<!-- Importante manter a tag DEFER, e fazer o import das bibliotecas acima -->
-		<script type="text/javascript" src="qr_auth_lib.js" defer></script>
+		<script type="text/javascript" src="script/qr_auth_lib.js" defer></script>
+		<script type="text/javascript">
+			 $(function () {
+					 var generateKeys = function () {
+							 var crypt = new JSEncrypt({ default_key_size: 1024 });
+							 //true takes longer (probably safer)
+							 var async = false;
+							 var dt = new Date();
+							 var time = -(dt.getTime());
+							 if(async) {
+									 crypt.getKey(function () {
+											 dt = new Date();
+											 time += (dt.getTime());
+											 $('#privkey').val(crypt.getPrivateKey());
+											 $('#pubkey').val(crypt.getPublicKey());
+									 });
+									 return;
+							 }
+							 crypt.getKey();
+							 dt = new Date();
+							 time += (dt.getTime());
+							 $('#privkey').val(crypt.getPrivateKey());
+							 $('#pubkey').val(crypt.getPublicKey());
+					 };
+					 generateKeys();
+			 });
+		</script>
 	</head>
 	<body>
 		<div class="wrap">
+			<textarea id="privkey" style="display:none;"></textarea>
+			<textarea id="pubkey" style="display:none;"></textarea>
 			<div class="avatar">
 				<img src="https://digitalnomadsforum.com/styles/FLATBOOTS/theme/images/user4.png">
 			</div>

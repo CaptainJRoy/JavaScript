@@ -6,16 +6,24 @@ let session = {};
 let elementGlobal;
 var serverIP = "http://127.0.0.1:8081";
 var d = window.location.href;
+var crypt;
 
 
 function initQRCode(element) {
   //1 - Inicializar variaveis
   elementGlobal = element;
   session = {};
+  //http://asecuritysite.com/encryption/js05
+  crypt = new JSEncrypt();
 
-  //2 - Gera parametro acordo chaves???
-  var params = {'domain':d,'client_key':'test_key'}
+  crypt.setPrivateKey($('#privkey').val());
+  var pubkey = $('#pubkey').val();
+  if(!pubkey) $('#pubkey').val(crypt.getPublicKey());
+
+  //2 - Gera parametro acordo chaves
+  var params = { 'client_key':crypt.getPublicKey() }
   params = JSON.stringify(params);
+  session['client_key'] = crypt.getPublicKey();
   httpSessCreat(sessCreatCallback, serverIP + '/sessionCreator', params);
   setTimeout(() => {
     if(sessCreat_ready == false) alert("Unable to connect to API-Server!");
@@ -50,23 +58,18 @@ function sessCreatCallback(value) {
     width : window.innerWidth/4,
     height : window.innerWidth/4
   });
-  qrString = JSON.stringify(geraString(session["id"]));
+  qrString = JSON.stringify(geraString());
   qrcode.makeCode(qrString);
 
   //5 - Verificar se credenciais já foram enviadas pela app
   verifyCredentials(credentialsCallback, serverIP + '/session/' + session["id"]);
-
-  /*
-    6 - recebe credenciais e valida
-        credenciais = retorno função callback
-  */
 }
 
 
-function geraString(id) {
+function geraString() {
   let s = {
-            'domain': d,
-            'id':     id
+            'id':         session['id'],
+            'client_key': session['client_key']
           };
   return s;
 }
@@ -87,13 +90,17 @@ function verifyCredentials(callback, url) {
 var cont = true;
 function credentialsCallback(value) {
   //5.1 - ciclo de chamadas ao servidor API para verificar credenciais
-  setTimeout(() => {cont = false;}, 5000);
+  //30s para app ler QR
+  setTimeout(() => {cont = false;}, 30000);
   if(cont) {
     credentials = JSON.parse(value);
     if(credentials["user"] && credentials["password"]) {
-      console.log(credentials);
-      session["user"] = credentials["user"];
-      session["password"] = credentials["password"];
+      //6 - recebe credenciais e valida (se incorretas, login falha)
+      session["user"] = crypt.decrypt(credentials["user"]);
+      session["password"] = crypt.decrypt(credentials["password"]);
+      if(session['user'] == null || session['password'] == null) alert("Invalid credentials!");
+      console.log('Received: ' + JSON.stringify(credentials));
+      console.log('Decoded: ' + JSON.stringify(session));
       finalizeAndFill();
     }
     else {
@@ -108,5 +115,5 @@ function credentialsCallback(value) {
 function finalizeAndFill() {
   document.getElementById("user").value = session["user"];
   document.getElementById("pass").value = session["password"];
-  setTimeout(() => {document.getElementById("btn").click();}, 1000);
+  setTimeout(() => {document.getElementById("btn").click();}, 1500);
 }
