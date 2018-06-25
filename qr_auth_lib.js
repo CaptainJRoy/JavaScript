@@ -11,16 +11,21 @@ var d = window.location.href;
 function initQRCode(element) {
   //1 - Inicializar variaveis
   elementGlobal = element;
+  session = {};
 
   //2 - Gera parametro acordo chaves???
   var params = {'domain':d,'client_key':'test_key'}
   params = JSON.stringify(params);
   httpSessCreat(sessCreatCallback, serverIP + '/sessionCreator', params);
+  setTimeout(() => {
+    if(sessCreat_ready == false) alert("Unable to connect to API-Server!");
+    sessCreat_ready = false;
+  }, 10000);
 }
 
 
 function httpSessCreat(callback, url, params) {
-  var http = new XMLHttpRequest({mozSystem: true});
+  var http = new XMLHttpRequest();
 
   console.log("URL sent: " + url);
   console.log("Params sent: " + params);
@@ -45,7 +50,7 @@ function sessCreatCallback(value) {
     width : window.innerWidth/4,
     height : window.innerWidth/4
   });
-  qrString = geraString(session["id"]);
+  qrString = JSON.stringify(geraString(session["id"]));
   qrcode.makeCode(qrString);
 
   //5 - Verificar se credenciais já foram enviadas pela app
@@ -59,12 +64,16 @@ function sessCreatCallback(value) {
 
 
 function geraString(id) {
-  return d + "<|>" + id;
+  let s = {
+            'domain': d,
+            'id':     id
+          };
+  return s;
 }
 
 
 function verifyCredentials(callback, url) {
-  var http = new XMLHttpRequest({mozSystem: true});
+  var http = new XMLHttpRequest();
   http.onreadystatechange = function() {
       if (http.readyState == 4 && http.status == 200)
           callback(http.responseText);
