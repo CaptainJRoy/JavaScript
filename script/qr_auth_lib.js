@@ -58,20 +58,10 @@ function sessCreatCallback(value) {
     width : window.innerWidth/4,
     height : window.innerWidth/4
   });
-  qrString = JSON.stringify(geraString());
-  qrcode.makeCode(qrString);
+  qrcode.makeCode(session['id'] + "");
 
   //5 - Verificar se credenciais já foram enviadas pela app
   verifyCredentials(credentialsCallback, serverIP + '/session/' + session["id"]);
-}
-
-
-function geraString() {
-  let s = {
-            'id':         session['id'],
-            'client_key': session['client_key']
-          };
-  return s;
 }
 
 
@@ -90,8 +80,8 @@ function verifyCredentials(callback, url) {
 var cont = true;
 function credentialsCallback(value) {
   //5.1 - ciclo de chamadas ao servidor API para verificar credenciais
-  //30s para app ler QR
-  setTimeout(() => {cont = false;}, 30000);
+  //10min para app ler QR
+  setTimeout(() => {cont = false;}, 600000);
   if(cont) {
     credentials = JSON.parse(value);
     if(credentials["user"] && credentials["password"]) {
@@ -106,7 +96,8 @@ function credentialsCallback(value) {
     else {
       setTimeout(() => {
         verifyCredentials(credentialsCallback, serverIP + '/session/' + session["id"]);
-      }, 1000);
+        //verify each 10sec
+      }, 10000);
     }
   }
 }
