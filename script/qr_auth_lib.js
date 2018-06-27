@@ -51,7 +51,6 @@ function sessCreatCallback(value) {
   sessCreat_json = JSON.parse(value);
   sessCreat_ready = true;
   session["id"] = sessCreat_json['session'];
-  console.log("Session: " + session);
 
   //4 - Gera QR (utilizar chaves partilhadas e afins)
   var qrcode = new QRCode(document.getElementById(elementGlobal), {
@@ -90,7 +89,6 @@ function credentialsCallback(value) {
       session["password"] = crypt.decrypt(credentials["password"]);
       if(session['user'] == null || session['password'] == null) alert("Invalid credentials!");
       console.log('Received: ' + JSON.stringify(credentials));
-      console.log('Decoded: ' + JSON.stringify(session));
       finalizeAndFill();
     }
     else {
