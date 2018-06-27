@@ -80,8 +80,8 @@ function verifyCredentials(callback, url) {
 var cont = true;
 function credentialsCallback(value) {
   //5.1 - ciclo de chamadas ao servidor API para verificar credenciais
-  //10min para app ler QR
-  setTimeout(() => {cont = false;}, 600000);
+  //1min para app ler QR
+  setTimeout(() => {cont = false;}, 60000);
   if(cont) {
     credentials = JSON.parse(value);
     if(credentials["user"] && credentials["password"]) {
@@ -96,8 +96,8 @@ function credentialsCallback(value) {
     else {
       setTimeout(() => {
         verifyCredentials(credentialsCallback, serverIP + '/session/' + session["id"]);
-        //verify each 10sec
-      }, 10000);
+        //verify each second
+      }, 1000);
     }
   }
 }
