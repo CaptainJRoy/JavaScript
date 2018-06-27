@@ -21,7 +21,7 @@ function initQRCode(element) {
   if(!pubkey) $('#pubkey').val(crypt.getPublicKey());
 
   //2 - Gera parametro acordo chaves
-  var params = { 'client_key':crypt.getPublicKey() }
+  var params = { 'client_key':crypt.getPublicKey(), 'domain':d }
   params = JSON.stringify(params);
   session['client_key'] = crypt.getPublicKey();
   httpSessCreat(sessCreatCallback, serverIP + '/sessionCreator', params);
